@@ -1,11 +1,15 @@
 import React from 'react';
+import searchAlbumsAPI from '../services/searchAlbumsAPI';
 // import PropTypes from 'prop-types';
 // import Loading from './Loading';
 import Header from './Header';
+import Loading from './Loading';
 
 class Search extends React.Component {
   state = {
-    search: ' ',
+    isLoading: true,
+    search: '',
+    albuns: [],
   }
 
   canSubmit = () => {
@@ -22,9 +26,23 @@ class Search extends React.Component {
     });
   }
 
+  handleClick = async () => {
+    this.setState({ isLoading: true },
+      async () => {
+        const { search } = this.state;
+        const albuns = await searchAlbumsAPI(search);
+        console.log(albuns)
+        this.setState({
+          isLoading: false,
+          albuns,
+        });
+      });
+  }
+
   render() {
     // const { isLoading } = this.state;
-    const { handleChange, canSubmit } = this;
+    const { handleChange, handleClick, canSubmit } = this;
+    const { isLoading, albuns, search } = this.state;
     return (
       <div>
         <Header />
@@ -37,12 +55,23 @@ class Search extends React.Component {
           />
           <button
             disabled={ !canSubmit() }
+            onClick={ handleClick }
             type="button"
             data-testid="search-artist-button"
           >
             Pesquisar
           </button>
         </div>
+        {isLoading ? <Loading />
+          : (
+            <>
+              <p>{`Resultados de ${search}`}</p>
+              <div>
+                {albuns}
+              </div>
+            </>
+          )}
+
       </div>
     );
   }
