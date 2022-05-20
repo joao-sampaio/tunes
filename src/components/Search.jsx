@@ -1,14 +1,25 @@
 import React from 'react';
 import searchAlbumsAPI from '../services/searchAlbumsAPI';
-// import PropTypes from 'prop-types';
-// import Loading from './Loading';
+
+import AlbumCard from './AlbumCard';
+
 import Header from './Header';
-import Loading from './Loading';
+
+// {
+//   artistId: 12,
+//   artistName: "Artist Name",
+//   collectionId: 123,
+//   collectionName: "Collection Name",
+//   collectionPrice: 12.25,
+//   artworkUrl100: "https://url-to-image",
+//   releaseDate: "2012-03-02T08:00:00Z",
+//   trackCount: 8,
+// }
 
 class Search extends React.Component {
   state = {
-    isLoading: true,
     search: '',
+    searchKey: '',
     albuns: [],
   }
 
@@ -23,18 +34,19 @@ class Search extends React.Component {
     const value = target.type === 'checkbox' ? target.checked : target.value;
     this.setState({
       [name]: value,
+      searchKey: value,
     });
   }
 
   handleClick = async () => {
-    this.setState({ isLoading: true },
+    this.setState({},
       async () => {
         const { search } = this.state;
         const albuns = await searchAlbumsAPI(search);
-        console.log(albuns)
+        console.log(albuns);
         this.setState({
-          isLoading: false,
           albuns,
+          search: '',
         });
       });
   }
@@ -42,9 +54,9 @@ class Search extends React.Component {
   render() {
     // const { isLoading } = this.state;
     const { handleChange, handleClick, canSubmit } = this;
-    const { isLoading, albuns, search } = this.state;
+    const { albuns, search, searchKey } = this.state;
     return (
-      <div>
+      <div data-testid="page-search">
         <Header />
         <div>
           <input
@@ -52,6 +64,7 @@ class Search extends React.Component {
             placeholder="Banda ou Artista"
             data-testid="search-artist-input"
             onChange={ handleChange }
+            value={ search }
           />
           <button
             disabled={ !canSubmit() }
@@ -62,16 +75,20 @@ class Search extends React.Component {
             Pesquisar
           </button>
         </div>
-        {isLoading ? <Loading />
-          : (
+        {albuns.length > 0
+          ? (
             <>
-              <p>{`Resultados de ${search}`}</p>
+              <p>{`Resultado de álbuns de: ${searchKey}`}</p>
               <div>
-                {albuns}
+                {albuns.map((album) => {
+                  const { collectionId } = album;
+                  return <AlbumCard key={ collectionId } { ...album } />;
+                })}
               </div>
             </>
+          ) : (
+            <p>Nenhum álbum foi encontrado</p>
           )}
-
       </div>
     );
   }
